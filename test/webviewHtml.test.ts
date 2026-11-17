@@ -35,6 +35,24 @@ describe('buildHtml', () => {
     expect(html).toContain('<span id="breadcrumb" class="toolbar-title" data-title="demo &lt;x&gt;.md">demo &lt;x&gt;.md</span>');
   });
 
+  test('has no initial anchor by default', () => {
+    expect(html).toContain('<body class="mode-rendered">');
+  });
+
+  test('carries the escaped initial anchor on the body', () => {
+    const withAnchor = buildHtml({
+      title: 't',
+      body: '',
+      source: '',
+      cspSource: 'CSP',
+      nonce: 'abc',
+      styleUri: 's',
+      scriptUri: 'j',
+      anchor: 'a"b<c',
+    });
+    expect(withAnchor).toContain('<body class="mode-rendered" data-anchor="a&quot;b&lt;c">');
+  });
+
   test('toolbar has the position indicator', () => {
     expect(html).toContain('<span id="position" class="toolbar-position">Position 0%</span>');
   });

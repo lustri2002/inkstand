@@ -112,6 +112,16 @@ function setMode(mode: Mode): void {
   applyMode(mode);
 }
 
+/** Scrolls the rendered page to the heading or element with this id (searched only inside the content). */
+function reveal(id: string): void {
+  const target = content.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+  if (!target) return;
+  setMode('rendered');
+  pinnedHeading = headings.includes(target) ? target : undefined;
+  target.scrollIntoView();
+  updateIndicators();
+}
+
 function setToc(open: boolean): void {
   state.toc = open;
   applyToc();
@@ -121,6 +131,8 @@ function setToc(open: boolean): void {
 buildToc();
 applyToc();
 applyMode(state.mode);
+// Opened from a link such as other.md#section.
+if (body.dataset.anchor) reveal(body.dataset.anchor);
 
 segments.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode as Mode)));
 tocToggle.addEventListener('click', () => setToc(!state.toc));
@@ -160,14 +172,14 @@ content.addEventListener('click', (event) => {
     } catch {
       // keep raw
     }
-    document.getElementById(id)?.scrollIntoView();
+    reveal(id);
     return;
   }
   vscode.postMessage({ type: 'openLink', href });
 });
 
 window.addEventListener('message', (event: MessageEvent) => {
-  const message = event.data as { type?: string; html?: string; source?: string } | undefined;
+  const message = event.data as { type?: string; html?: string; source?: string; id?: string } | undefined;
   if (message?.type === 'update') {
     const y = window.scrollY;
     content.innerHTML = message.html ?? '';
@@ -177,5 +189,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     updateIndicators();
   } else if (message?.type === 'toggleMode') {
     setMode(state.mode === 'rendered' ? 'source' : 'rendered');
+  } else if (message?.type === 'reveal' && typeof message.id === 'string') {
+    reveal(message.id);
   }
 });

@@ -15,7 +15,10 @@ export function buildHtml(a: {
   nonce: string;
   styleUri: string;
   scriptUri: string;
+  /** Heading id to scroll to once the page has loaded. */
+  anchor?: string;
 }): string {
+  const anchorAttr = a.anchor ? ` data-anchor="${escapeHtml(a.anchor)}"` : '';
   const csp =
     `default-src 'none'; img-src ${a.cspSource} https: data:; ` +
     `style-src ${a.cspSource}; font-src ${a.cspSource}; script-src 'nonce-${a.nonce}'`;
@@ -27,7 +30,7 @@ export function buildHtml(a: {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${a.styleUri}">
 </head>
-<body class="mode-rendered">
+<body class="mode-rendered"${anchorAttr}>
 <header class="toolbar">
 <div class="toolbar-status">
 <span id="breadcrumb" class="toolbar-title" data-title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</span>
