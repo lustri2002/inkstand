@@ -2,6 +2,8 @@
 
 # Inkstand
 
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/lustri2002.inkstand?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=lustri2002.inkstand)
+
 **A beautiful rendered view for Markdown in VS Code.** Inkstand opens `.md` files already rendered — headings, tables, task lists, highlighted code — with a source view, a table of contents and side-by-side editing, in light and dark themes.
 
 ![Inkstand in a dark theme, with the table of contents open](docs/images/dark-contents.png)
@@ -46,7 +48,17 @@ Inkstand also hides VS Code's editor-type dropdown in the breadcrumbs (`breadcru
 
 ## Install
 
-Inkstand is not on the Marketplace yet. To build and install it from source you need Node.js 18 or newer:
+Install Inkstand from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lustri2002.inkstand): open the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`), search for **Inkstand** and click **Install**. Or from a terminal:
+
+```bash
+code --install-extension lustri2002.inkstand
+```
+
+Each version is also attached as a `.vsix` file to the [GitHub Releases](https://github.com/lustri2002/inkstand/releases).
+
+### From source
+
+You need Node.js 18 or newer:
 
 ```bash
 git clone https://github.com/lustri2002/inkstand.git
