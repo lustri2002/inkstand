@@ -1,0 +1,48 @@
+# Publishes Inkstand to the VS Code Marketplace when a version tag (e.g. v0.6.0) is pushed.
+# Authentication uses Marketplace Trusted Publishing (OIDC): no tokens or secrets are stored.
+# Requires a Trusted Publishing policy on https://marketplace.visualstudio.com/manage
+# for owner "lustri2002", repository "inkstand", workflow file "publish.yml".
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub Release with the .vsix
+      id-token: write # Marketplace Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check that the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            exit 1
+          fi
+
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Package
+        run: npx vsce package --no-dependencies --out "inkstand-${GITHUB_REF_NAME#v}.vsix"
+
+      - name: Publish to the Marketplace
+        run: npx vsce publish --no-dependencies --oidc --packagePath "inkstand-${GITHUB_REF_NAME#v}.vsix"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "inkstand-${GITHUB_REF_NAME#v}.vsix" --title "Inkstand ${GITHUB_REF_NAME#v}" --notes "See [CHANGELOG.md](CHANGELOG.md)."

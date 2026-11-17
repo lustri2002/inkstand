@@ -1,3 +1,5 @@
+<p align="center"><img src="icon.png" width="112" alt="Inkstand icon"></p>
+
 # Inkstand
 
 **A beautiful rendered view for Markdown in VS Code.** Inkstand opens `.md` files already rendered — headings, tables, task lists, highlighted code — with a source view, a table of contents and side-by-side editing, in light and dark themes.
