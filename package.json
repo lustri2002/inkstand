@@ -3,8 +3,9 @@
   "displayName": "Inkstand",
   "description": "A beautiful rendered view for Markdown in VS Code: source view, table of contents, reading position and side-by-side editing.",
   "version": "0.6.0",
-  "publisher": "local",
+  "publisher": "lustri2002",
   "license": "MIT",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -96,6 +97,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile",
     "compile": "node esbuild.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
