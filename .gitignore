@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.vsix
+.DS_Store
+
+# Internal working notes (not published)
+docs/design.md
+docs/ledger.md
+docs/superpowers/

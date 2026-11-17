@@ -1,0 +1,133 @@
+{
+  "name": "inkstand",
+  "displayName": "Inkstand",
+  "description": "A beautiful rendered view for Markdown in VS Code: source view, table of contents, reading position and side-by-side editing.",
+  "version": "0.6.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCustomEditor:inkstand.editor"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "inkstand.editor",
+        "displayName": "Inkstand",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "inkstand.toggle",
+        "title": "Markdown: Toggle Rendered / Source"
+      },
+      {
+        "command": "inkstand.editSource",
+        "title": "Markdown: Edit Side by Side",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "inkstand.showRendered",
+        "title": "Markdown: Back to Rendered View",
+        "icon": "$(eye)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "inkstand.showRendered",
+          "group": "navigation@-100",
+          "when": "resourceLangId == markdown && activeCustomEditorId != inkstand.editor"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "inkstand.editSource",
+          "when": "activeCustomEditorId == inkstand.editor"
+        },
+        {
+          "command": "inkstand.showRendered",
+          "when": "resourceLangId == markdown && activeCustomEditorId != inkstand.editor"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "inkstand.toggle",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "when": "activeCustomEditorId == inkstand.editor || resourceLangId == markdown"
+      }
+    ],
+    "configuration": {
+      "title": "Inkstand",
+      "properties": {
+        "inkstand.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open Markdown files directly in the rendered view. When disabled, they open as text."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "breadcrumbs.showEditorType": false
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "markdown-it": "^15.0.3",
+    "markdown-it-task-lists": "^2.1.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^4.1.1",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "keywords": [
+    "markdown",
+    "preview",
+    "reader",
+    "table of contents",
+    "rendered"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lustri2002/inkstand.git"
+  },
+  "homepage": "https://github.com/lustri2002/inkstand#readme",
+  "bugs": {
+    "url": "https://github.com/lustri2002/inkstand/issues"
+  }
+}
