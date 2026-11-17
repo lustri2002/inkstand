@@ -1,7 +1,7 @@
 export type LinkTarget =
   | { kind: 'anchor'; id: string }
   | { kind: 'external'; url: string }
-  | { kind: 'markdown'; path: string }
+  | { kind: 'markdown'; path: string; anchor?: string }
   | { kind: 'file'; path: string }
   | { kind: 'ignored' };
 
@@ -25,7 +25,10 @@ export function classifyLink(href: string): LinkTarget {
     return /^(https?|mailto)$/i.test(scheme[1]) ? { kind: 'external', url: href } : IGNORED;
   }
 
+  const hash = href.indexOf('#');
+  const anchor = hash >= 0 ? decode(href.slice(hash + 1)) : '';
   const path = decode(href.replace(/[?#].*$/, ''));
   if (!path) return IGNORED;
-  return /\.(md|markdown)$/i.test(path) ? { kind: 'markdown', path } : { kind: 'file', path };
+  if (!/\.(md|markdown)$/i.test(path)) return { kind: 'file', path };
+  return anchor ? { kind: 'markdown', path, anchor } : { kind: 'markdown', path };
 }

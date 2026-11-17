@@ -50,11 +50,12 @@ export interface RenderOptions {
 
 const FRONT_MATTER = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
+/** Same rules as GitHub's heading anchors: letters, marks, digits, `_` and `-` survive; spaces become `-`. */
 function slugify(text: string): string {
   return text
     .trim()
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/[^\p{L}\p{M}\p{N}\p{Pc}\s-]/gu, '')
     .replace(/\s/g, '-');
 }
 
