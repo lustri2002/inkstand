@@ -214,6 +214,7 @@ body.toc-open.has-toc.mode-rendered #toc { display: block; }
 #toc-list .toc-level-3 a { padding-left: 34px; }
 
 @media (max-width: 760px) {
+  .toolbar-reading { display: none; }
   #toc {
     position: fixed;
     top: 49px;
