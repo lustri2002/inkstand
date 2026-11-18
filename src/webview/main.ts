@@ -1,6 +1,7 @@
 import { activeIndex, breadcrumb, scrollPercent } from './outline';
 import { type LineBlock, lineToOffset, offsetToLine } from './scrollSync';
 import { renderDiagrams, watchTheme } from './diagrams';
+import { countWords, readingMinutes } from './stats';
 
 declare function acquireVsCodeApi(): {
   getState(): unknown;
@@ -25,10 +26,25 @@ const sourceCode = document.querySelector<HTMLElement>('#source code')!;
 const segments = Array.from(document.querySelectorAll<HTMLButtonElement>('.segment'));
 const crumb = document.getElementById('breadcrumb')!;
 const position = document.getElementById('position')!;
+const reading = document.getElementById('reading')!;
 const tocToggle = document.getElementById('toc-toggle')!;
 const tocList = document.getElementById('toc-list')!;
 const fileTitle = crumb.dataset.title ?? '';
 const mermaidUrl = body.dataset.mermaid ?? '';
+
+/** Reading time of the prose: code, diagrams, formulas and the code tools are left out. */
+function updateReading(): void {
+  const skip = 'pre, .code-tools, math, svg, table.front-matter';
+  let text = '';
+  const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => (node.parentElement?.closest(skip) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+  });
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) text += ` ${node.nodeValue ?? ''}`;
+  const words = countWords(text);
+  const minutes = readingMinutes(words);
+  reading.textContent = minutes ? `${minutes} min read` : '';
+  reading.title = `${words.toLocaleString()} ${words === 1 ? 'word' : 'words'}`;
+}
 
 /** Wraps each code block with its language and a Copy button (the extension writes the clipboard). */
 function addCodeTools(): void {
@@ -202,6 +218,7 @@ function setToc(open: boolean): void {
 
 countLines();
 buildToc();
+updateReading();
 addCodeTools();
 drawDiagrams();
 watchTheme(drawDiagrams);
@@ -287,6 +304,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     scrollToY(y);
     countLines();
     buildToc();
+    updateReading();
     addCodeTools();
     drawDiagrams();
     updateIndicators();

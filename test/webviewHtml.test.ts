@@ -64,6 +64,10 @@ describe('buildHtml', () => {
     expect(html).toContain('<span id="position" class="toolbar-position">Position 0%</span>');
   });
 
+  test('toolbar has an empty reading time, filled in by the webview', () => {
+    expect(html).toContain('<span id="reading" class="toolbar-position toolbar-reading"></span>');
+  });
+
   test('toolbar has the table of contents toggle', () => {
     expect(html).toMatch(/<button[^>]*id="toc-toggle"[^>]*aria-pressed="false"[^>]*>Contents<\/button>/);
   });

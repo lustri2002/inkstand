@@ -39,6 +39,7 @@ export function buildHtml(a: {
 <div class="toolbar-status">
 <span id="breadcrumb" class="toolbar-title" data-title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</span>
 <span id="position" class="toolbar-position">Position 0%</span>
+<span id="reading" class="toolbar-position toolbar-reading"></span>
 </div>
 <div class="toolbar-actions">
 <button type="button" id="toc-toggle" class="pill-button" aria-pressed="false">Contents</button>

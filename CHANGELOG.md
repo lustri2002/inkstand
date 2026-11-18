@@ -11,6 +11,7 @@ All notable changes to Inkstand are listed here.
 - **Mermaid diagrams** (` ```mermaid `), loaded only for pages that have one and following the light or dark theme.
 - **Math** with KaTeX: `$inline$`, `$$display$$` and ` ```math ` blocks.
 - **Copy button** and language label on code blocks.
+- **Reading time** in the toolbar (`6 min read`), with the word count on hover. Code, diagrams and formulas are not counted.
 - **Find in the rendered view:** `Cmd+F` / `Ctrl+F` opens VS Code's find widget.
 - Links such as `other.md#section` open the file scrolled to that section, including links to a section of the same file.
 - Links to other Markdown files open in the rendered view even when `inkstand.enabled` is `false`.

@@ -17,7 +17,7 @@
 - **Opens rendered by default.** `.md` and `.markdown` files open straight into the rendered view — no raw `#` and `**` first.
 - **Rendered / Source switch.** Flip between the rendered page and the highlighted Markdown source in the same panel. Each mode remembers its scroll position.
 - **Table of contents.** The **Contents** button opens a side panel with the H1–H3 headings. The current section is highlighted and clicking a heading jumps to it.
-- **Reading position.** The toolbar shows the section you are in (e.g. `Release checklist › Before the freeze`) and how far you have read (`Position 46%`).
+- **Reading position.** The toolbar shows the section you are in (e.g. `Release checklist › Before the freeze`), how far you have read (`Position 46%`) and the reading time (`6 min read`, with the word count on hover).
 - **Side-by-side editing.** The pencil opens VS Code's text editor next to the rendered view, at the line you are reading. The rendered view updates live as you type, and the two stay scrolled to the same place. Double-click a paragraph to jump to its source. Close the text tab when you are done.
 - **Follows your theme.** Colors and fonts come from your VS Code theme, including high-contrast themes.
 - **Clickable task lists.** Ticking a `- [ ]` box writes `[x]` into the file (undo with `Cmd+Z` / `Ctrl+Z`, save as usual).
