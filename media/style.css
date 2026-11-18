@@ -298,6 +298,40 @@ pre {
 }
 pre code { background: none; padding: 0; font-size: 0.9em; }
 
+/* GitHub alerts: > [!NOTE] and friends */
+.markdown-alert {
+  --alert-color: var(--vscode-editorInfo-foreground, #3794ff);
+  margin: 0 0 1em;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--alert-color);
+  background: var(--vscode-textBlockQuote-background, transparent);
+  border-radius: 0 6px 6px 0;
+}
+.markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.4em;
+  font-weight: 600;
+  color: var(--alert-color);
+}
+.markdown-alert-title svg { fill: currentColor; flex: none; }
+.markdown-alert-tip { --alert-color: var(--vscode-testing-iconPassed, #3fb950); }
+.markdown-alert-important { --alert-color: var(--vscode-charts-purple, #a371f7); }
+.markdown-alert-warning { --alert-color: var(--vscode-editorWarning-foreground, #d29922); }
+.markdown-alert-caution { --alert-color: var(--vscode-editorError-foreground, #f85149); }
+
+/* Footnotes */
+.footnote-ref { font-size: 0.75em; line-height: 0; }
+.footnote-ref a { padding: 0 1px; }
+hr.footnotes-sep { margin-top: 2.5em; }
+section.footnotes {
+  font-size: 0.875em;
+  color: var(--vscode-descriptionForeground);
+}
+.footnote-backref { margin-left: 0.25em; }
+
 /* Front matter */
 pre.front-matter {
   color: var(--vscode-descriptionForeground);

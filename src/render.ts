@@ -1,5 +1,8 @@
 import MarkdownIt from 'markdown-it';
 import taskLists from 'markdown-it-task-lists';
+import githubAlerts from 'markdown-it-github-alerts';
+import footnote from 'markdown-it-footnote';
+import { full as emoji } from 'markdown-it-emoji';
 import hljs from 'highlight.js';
 import { parse as parseYaml } from 'yaml';
 
@@ -69,6 +72,11 @@ function createMarkdown(options: RenderOptions): InstanceType<typeof MarkdownIt>
   const md = new MarkdownIt({ html: false, linkify: true });
   // Clicking a box writes the change to the file (see editorProvider).
   md.use(taskLists, { enabled: true });
+  // > [!NOTE], > [!TIP], > [!IMPORTANT], > [!WARNING], > [!CAUTION]
+  md.use(githubAlerts);
+  md.use(footnote);
+  // :tada: becomes 🎉 like on GitHub; text smileys such as :) stay as they are.
+  md.use(emoji, { shortcuts: {} });
 
   // Source line of each block (0-based, counted in the whole file), used to sync scrolling with the
   // text editor and to jump from the rendered page to the source.

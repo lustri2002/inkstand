@@ -21,6 +21,7 @@
 - **Side-by-side editing.** The pencil opens VS Code's text editor next to the rendered view, at the line you are reading. The rendered view updates live as you type, and the two stay scrolled to the same place. Double-click a paragraph to jump to its source. Close the text tab when you are done.
 - **Follows your theme.** Colors and fonts come from your VS Code theme, including high-contrast themes.
 - **Clickable task lists.** Ticking a `- [ ]` box writes `[x]` into the file (undo with `Cmd+Z` / `Ctrl+Z`, save as usual).
+- **GitHub extras:** alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), footnotes (`[^1]`) and emoji shortcodes (`:tada:`).
 - **YAML front matter** is shown as a tidy key/value table.
 - **Safe by default.** Raw HTML inside Markdown is shown as text, scripts never run, and only HTTPS remote images are loaded.
 
