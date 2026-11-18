@@ -7,6 +7,11 @@ import { buildHtml } from './webviewHtml';
 export const VIEW_TYPE = 'inkstand.editor';
 
 const UPDATE_DEBOUNCE_MS = 150;
+/** After the preview scrolls the text editor, its own scroll events are not echoed back for this long. */
+const SYNC_ECHO_MS = 150;
+
+const setting = <T>(name: string, fallback: T): T =>
+  vscode.workspace.getConfiguration('inkstand').get<T>(name, fallback);
 
 /** URIs (as strings) the user explicitly asked to open rendered even when inkstand.enabled is false. */
 export const forceRendered = new Set<string>();
@@ -57,7 +62,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
   ): void {
     // The toggle command marks a document as explicitly requested in rendered mode.
     const forced = forceRendered.delete(document.uri.toString());
-    if (!forced && !vscode.workspace.getConfiguration('inkstand').get<boolean>('enabled', true)) {
+    if (!forced && !setting('enabled', true)) {
       void vscode.commands
         .executeCommand('vscode.openWith', document.uri, 'default', { viewColumn: panel.viewColumn })
         .then(() => panel.dispose());
@@ -131,10 +136,33 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       );
     });
 
+    // Scroll sync: the text editor's first visible line drives the preview, and the other way round.
+    let ignoreEditorUntil = 0;
+    const textEditors = () => vscode.window.visibleTextEditors.filter((e) => e.document.uri.toString() === key);
+    const rangesSub = vscode.window.onDidChangeTextEditorVisibleRanges((e) => {
+      if (e.textEditor.document.uri.toString() !== key || !panel.visible || e.visibleRanges.length === 0) return;
+      if (Date.now() < ignoreEditorUntil || !setting('scrollSync', true)) return;
+      void webview.postMessage({
+        type: 'syncScroll',
+        line: e.visibleRanges[0].start.line,
+        lineCount: e.textEditor.document.lineCount,
+      });
+    });
+
     const messageSub = webview.onDidReceiveMessage((message: unknown) => {
-      const m = message as { type?: string; href?: unknown };
-      if (m?.type === 'edit') {
-        void vscode.commands.executeCommand('inkstand.editSource');
+      const m = message as { type?: string; href?: unknown; line?: unknown };
+      const line = typeof m?.line === 'number' && Number.isFinite(m.line) ? Math.max(0, Math.floor(m.line)) : undefined;
+      if (m?.type === 'edit' || (m?.type === 'dblclick' && setting('doubleClickToEdit', true))) {
+        void vscode.commands.executeCommand('inkstand.editSource', { line });
+        return;
+      }
+      if (m?.type === 'revealLine') {
+        if (line === undefined || !setting('scrollSync', true)) return;
+        const editors = textEditors();
+        if (editors.length === 0) return;
+        ignoreEditorUntil = Date.now() + SYNC_ECHO_MS;
+        const range = new vscode.Range(line, 0, line, 0);
+        for (const editor of editors) editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
         return;
       }
       if (m?.type !== 'openLink' || typeof m.href !== 'string') return;
@@ -161,6 +189,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       clearTimeout(timer);
       changeSub.dispose();
       messageSub.dispose();
+      rangesSub.dispose();
       viewStateSub.dispose();
     });
   }

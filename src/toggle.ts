@@ -20,17 +20,23 @@ function sameUri(a: vscode.Uri, b: vscode.Uri): boolean {
   return a.toString() === b.toString();
 }
 
-/** Pencil: open the file in VS Code's text editor next to the rendered view, which stays open. */
-async function editBeside(rendered: RenderedTab): Promise<void> {
+/**
+ * Pencil: open the file in VS Code's text editor next to the rendered view, which stays open.
+ * `line` (0-based) is the source line to show at the top, e.g. the one the reader is looking at.
+ */
+async function editBeside(rendered: RenderedTab, line?: number): Promise<void> {
   const uri = rendered.input.uri;
   // Reuse a text editor for this file if one is already open in another group.
   const existing = allTabs().find(
     (t) => isMarkdownTextTab(t) && sameUri(t.input.uri, uri) && t.group !== rendered.group,
   );
-  await vscode.window.showTextDocument(uri, {
+  const range = line === undefined ? undefined : new vscode.Range(line, 0, line, 0);
+  const editor = await vscode.window.showTextDocument(uri, {
     viewColumn: existing ? existing.group.viewColumn : vscode.ViewColumn.Beside,
     preview: false,
+    selection: range,
   });
+  if (range) editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
 }
 
 /** From the text editor: go back to the rendered view (focusing it if it is already open). */
@@ -68,9 +74,11 @@ export function registerToggle(context: vscode.ExtensionContext, provider: Rende
       if (isRenderedTab(tab)) provider.toggleActiveMode();
       else if (isMarkdownTextTab(tab)) await backToRendered(tab);
     }),
-    vscode.commands.registerCommand('inkstand.editSource', async () => {
+    // Called by the webview with { line }; from the palette or a keybinding without arguments.
+    vscode.commands.registerCommand('inkstand.editSource', async (arg?: { line?: unknown }) => {
       const tab = activeTab();
-      if (tab && isRenderedTab(tab)) await editBeside(tab);
+      const line = typeof arg?.line === 'number' ? arg.line : undefined;
+      if (tab && isRenderedTab(tab)) await editBeside(tab, line);
     }),
     vscode.commands.registerCommand('inkstand.showRendered', async () => {
       const tab = activeTab();

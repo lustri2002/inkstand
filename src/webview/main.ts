@@ -1,4 +1,5 @@
 import { activeIndex, breadcrumb, scrollPercent } from './outline';
+import { type LineBlock, lineToOffset, offsetToLine } from './scrollSync';
 
 declare function acquireVsCodeApi(): {
   getState(): unknown;
@@ -37,7 +38,37 @@ let tocLinks: HTMLAnchorElement[] = [];
 /** Heading chosen from the table of contents; cleared as soon as the user scrolls by hand. */
 let pinnedHeading: HTMLElement | undefined;
 
+/** Scroll events until this time come from our own scrolling and are not sent to the text editor. */
+let ignoreScrollUntil = 0;
+let lineCount = 1;
+
 const save = () => vscode.setState(state);
+
+function countLines(): void {
+  const text = sourceCode.textContent ?? '';
+  let count = 1;
+  for (let i = text.indexOf('\n'); i >= 0; i = text.indexOf('\n', i + 1)) count++;
+  lineCount = count;
+}
+
+/** Scrolls without echoing the scroll back to the text editor. */
+function scrollToY(y: number): void {
+  ignoreScrollUntil = performance.now() + 100;
+  window.scrollTo(0, y);
+}
+
+function lineBlocks(): LineBlock[] {
+  return Array.from(content.querySelectorAll<HTMLElement>('[data-line]'), (el) => {
+    const rect = el.getBoundingClientRect();
+    return { line: Number(el.dataset.line), top: rect.top + window.scrollY, height: rect.height };
+  });
+}
+
+/** Source line at the top of the rendered page, just below the toolbar; undefined in the source view. */
+function currentLine(): number | undefined {
+  if (state.mode !== 'rendered') return undefined;
+  return offsetToLine(lineBlocks(), window.scrollY + toolbar.offsetHeight, lineCount);
+}
 const levelOf = (h: HTMLElement) => Number(h.tagName.slice(1));
 
 function buildToc(): void {
@@ -101,7 +132,7 @@ function applyMode(mode: Mode): void {
   body.classList.toggle('mode-rendered', mode === 'rendered');
   body.classList.toggle('mode-source', mode === 'source');
   segments.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
-  window.scrollTo(0, state.scroll[mode] || 0);
+  scrollToY(state.scroll[mode] || 0);
   save();
   updateIndicators();
 }
@@ -128,6 +159,7 @@ function setToc(open: boolean): void {
   save();
 }
 
+countLines();
 buildToc();
 applyToc();
 applyMode(state.mode);
@@ -137,7 +169,10 @@ if (body.dataset.anchor) reveal(body.dataset.anchor);
 segments.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode as Mode)));
 tocToggle.addEventListener('click', () => setToc(!state.toc));
 document.getElementById('toc-close')!.addEventListener('click', () => setToc(false));
-document.getElementById('edit')!.addEventListener('click', () => vscode.postMessage({ type: 'edit' }));
+document.getElementById('edit')!.addEventListener('click', () => {
+  const line = currentLine();
+  vscode.postMessage({ type: 'edit', line: line === undefined ? undefined : Math.round(line) });
+});
 
 let frame = 0;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -146,6 +181,10 @@ function onScroll(): void {
     frame = requestAnimationFrame(() => {
       frame = 0;
       updateIndicators();
+      if (performance.now() >= ignoreScrollUntil) {
+        const line = currentLine();
+        if (line !== undefined) vscode.postMessage({ type: 'revealLine', line });
+      }
     });
   }
   clearTimeout(saveTimer);
@@ -159,6 +198,13 @@ window.addEventListener('resize', onScroll);
 for (const type of ['wheel', 'keydown', 'touchstart', 'mousedown']) {
   window.addEventListener(type, () => (pinnedHeading = undefined), { passive: true });
 }
+
+content.addEventListener('dblclick', (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target || target.closest('a, input, button')) return;
+  const block = target.closest<HTMLElement>('[data-line]');
+  if (block) vscode.postMessage({ type: 'dblclick', line: Number(block.dataset.line) });
+});
 
 content.addEventListener('click', (event) => {
   const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
@@ -179,17 +225,26 @@ content.addEventListener('click', (event) => {
 });
 
 window.addEventListener('message', (event: MessageEvent) => {
-  const message = event.data as { type?: string; html?: string; source?: string; id?: string } | undefined;
+  const message = event.data as
+    | { type?: string; html?: string; source?: string; id?: string; line?: number; lineCount?: number }
+    | undefined;
   if (message?.type === 'update') {
     const y = window.scrollY;
     content.innerHTML = message.html ?? '';
     sourceCode.innerHTML = message.source ?? '';
-    window.scrollTo(0, y);
+    scrollToY(y);
+    countLines();
     buildToc();
     updateIndicators();
   } else if (message?.type === 'toggleMode') {
     setMode(state.mode === 'rendered' ? 'source' : 'rendered');
   } else if (message?.type === 'reveal' && typeof message.id === 'string') {
     reveal(message.id);
+  } else if (message?.type === 'syncScroll' && typeof message.line === 'number' && state.mode === 'rendered') {
+    if (typeof message.lineCount === 'number') lineCount = message.lineCount;
+    const y = lineToOffset(lineBlocks(), message.line, lineCount);
+    if (y === undefined) return;
+    pinnedHeading = undefined;
+    scrollToY(Math.max(0, y - toolbar.offsetHeight));
   }
 });

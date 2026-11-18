@@ -89,6 +89,16 @@
           "type": "boolean",
           "default": true,
           "description": "Open Markdown files directly in the rendered view. When disabled, they open as text."
+        },
+        "inkstand.scrollSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Keep the rendered view and the text editor of the same file scrolled to the same place."
+        },
+        "inkstand.doubleClickToEdit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Double-click in the rendered view to open the text editor beside it at that line."
         }
       }
     },

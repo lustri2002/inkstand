@@ -4,6 +4,8 @@ All notable changes to Inkstand are listed here.
 
 ## Unreleased
 
+- **Scroll sync:** the rendered view and the text editor beside it stay scrolled to the same place (`inkstand.scrollSync`). The pencil opens the text editor at the line you are reading.
+- **Double-click to edit:** double-click a paragraph to open the text editor at its source line (`inkstand.doubleClickToEdit`).
 - **Find in the rendered view:** `Cmd+F` / `Ctrl+F` opens VS Code's find widget.
 - Links such as `other.md#section` open the file scrolled to that section, including links to a section of the same file.
 - Links to other Markdown files open in the rendered view even when `inkstand.enabled` is `false`.
