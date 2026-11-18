@@ -2,6 +2,12 @@
 
 All notable changes to Inkstand are listed here.
 
+## Unreleased
+
+- **Reading settings:** text column width (`inkstand.contentWidth`), font (`inkstand.fontFamily`), size (`inkstand.fontSize`) and line height (`inkstand.lineHeight`). They apply to open tabs right away.
+- **Contents depth:** `inkstand.tocDepth` lists headings down to H1–H6 (default H3), in Contents and in the toolbar's section path.
+- **Starting view:** `inkstand.defaultMode` (rendered or source) and `inkstand.tocOpen` choose how a file opens the first time.
+
 ## 0.7.0 — Scroll sync, diagrams and math
 
 ### New

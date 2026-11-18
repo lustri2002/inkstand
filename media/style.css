@@ -141,7 +141,7 @@ body.mode-source #toc-toggle { display: none; }
 main {
   flex: 1;
   min-width: 0;
-  max-width: 860px;
+  max-width: var(--ink-width, 860px);
   margin: 0 auto;
   padding: 8px 24px 64px;
 }
@@ -212,6 +212,9 @@ body.toc-open.has-toc.mode-rendered #toc { display: block; }
 #toc-list .toc-level-1 a.active { color: var(--vscode-textLink-foreground); }
 #toc-list .toc-level-2 a { padding-left: 22px; }
 #toc-list .toc-level-3 a { padding-left: 34px; }
+#toc-list .toc-level-4 a { padding-left: 46px; }
+#toc-list .toc-level-5 a { padding-left: 58px; }
+#toc-list .toc-level-6 a { padding-left: 70px; }
 
 @media (max-width: 760px) {
   .toolbar-reading { display: none; }
@@ -226,6 +229,13 @@ body.toc-open.has-toc.mode-rendered #toc { display: block; }
     background: var(--vscode-editor-background);
     box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
   }
+}
+
+/* Reading settings (inkstand.fontFamily, fontSize, lineHeight), set by the webview script. */
+#content {
+  font-family: var(--ink-font, inherit);
+  font-size: var(--ink-font-size, inherit);
+  line-height: var(--ink-line-height, 1.65);
 }
 
 body.mode-rendered #source { display: none; }

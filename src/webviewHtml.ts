@@ -1,3 +1,5 @@
+import type { ViewSettings } from './settings';
+
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -17,6 +19,8 @@ export function buildHtml(a: {
   scriptUri: string;
   /** Mermaid's script, loaded by the webview only when the page has a diagram. */
   mermaidUri: string;
+  /** Reading settings, applied by the webview script. */
+  settings: ViewSettings;
   /** Heading id to scroll to once the page has loaded. */
   anchor?: string;
 }): string {
@@ -34,7 +38,7 @@ export function buildHtml(a: {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${a.styleUri}">
 </head>
-<body class="mode-rendered" data-mermaid="${escapeHtml(a.mermaidUri)}"${anchorAttr}>
+<body class="mode-rendered" data-mermaid="${escapeHtml(a.mermaidUri)}" data-settings="${escapeHtml(JSON.stringify(a.settings))}"${anchorAttr}>
 <header class="toolbar">
 <div class="toolbar-status">
 <span id="breadcrumb" class="toolbar-title" data-title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</span>
