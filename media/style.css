@@ -266,7 +266,7 @@ p, ul, ol, blockquote, table, pre { margin: 0 0 1em; }
 ul, ol { padding-left: 2em; }
 li > p { margin: 0.25em 0; }
 li.task-list-item { list-style: none; margin-left: -1.4em; }
-li.task-list-item input { margin-right: 0.5em; }
+li.task-list-item input { margin-right: 0.5em; cursor: pointer; }
 
 blockquote {
   padding: 0 1em;

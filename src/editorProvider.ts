@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import * as vscode from 'vscode';
 import { classifyLink } from './links';
 import { renderMarkdown, renderSource } from './render';
+import { setTaskChecked } from './tasks';
 import { buildHtml } from './webviewHtml';
 
 export const VIEW_TYPE = 'inkstand.editor';
@@ -126,15 +127,28 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       wasVisible = e.webviewPanel.visible;
     });
 
+    const refresh = () =>
+      webview.postMessage({ type: 'update', html: render(), source: renderSource(document.getText()) });
+
     let timer: ReturnType<typeof setTimeout> | undefined;
     const changeSub = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() !== key) return;
       clearTimeout(timer);
-      timer = setTimeout(
-        () => webview.postMessage({ type: 'update', html: render(), source: renderSource(document.getText()) }),
-        UPDATE_DEBOUNCE_MS,
-      );
+      timer = setTimeout(() => void refresh(), UPDATE_DEBOUNCE_MS);
     });
+
+    /** Writes a checkbox click to the file; if that is not possible, the page is refreshed to undo the click. */
+    const toggleTask = async (line: number, checked: boolean): Promise<void> => {
+      const text = line < document.lineCount ? document.lineAt(line).text : '';
+      const updated = setTaskChecked(text, checked);
+      if (updated === undefined || updated === text) {
+        void refresh();
+        return;
+      }
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(document.uri, document.lineAt(line).range, updated);
+      if (!(await vscode.workspace.applyEdit(edit))) void refresh();
+    };
 
     // Scroll sync: the text editor's first visible line drives the preview, and the other way round.
     let ignoreEditorUntil = 0;
@@ -150,10 +164,14 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
     });
 
     const messageSub = webview.onDidReceiveMessage((message: unknown) => {
-      const m = message as { type?: string; href?: unknown; line?: unknown };
+      const m = message as { type?: string; href?: unknown; line?: unknown; checked?: unknown };
       const line = typeof m?.line === 'number' && Number.isFinite(m.line) ? Math.max(0, Math.floor(m.line)) : undefined;
       if (m?.type === 'edit' || (m?.type === 'dblclick' && setting('doubleClickToEdit', true))) {
         void vscode.commands.executeCommand('inkstand.editSource', { line });
+        return;
+      }
+      if (m?.type === 'toggleTask') {
+        if (line !== undefined && typeof m.checked === 'boolean') void toggleTask(line, m.checked);
         return;
       }
       if (m?.type === 'revealLine') {

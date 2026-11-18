@@ -67,7 +67,8 @@ function slugify(text: string): string {
 
 function createMarkdown(options: RenderOptions): InstanceType<typeof MarkdownIt> {
   const md = new MarkdownIt({ html: false, linkify: true });
-  md.use(taskLists, { enabled: false });
+  // Clicking a box writes the change to the file (see editorProvider).
+  md.use(taskLists, { enabled: true });
 
   // Source line of each block (0-based, counted in the whole file), used to sync scrolling with the
   // text editor and to jump from the rendered page to the source.
