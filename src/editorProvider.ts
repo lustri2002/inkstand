@@ -21,6 +21,10 @@ function isInside(child: vscode.Uri, parent: vscode.Uri): boolean {
 
 export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   private activePanel: vscode.WebviewPanel | undefined;
+  /** Open rendered panels, by document URI. */
+  private readonly panels = new Map<string, Set<vscode.WebviewPanel>>();
+  /** Heading to scroll to, by document URI, taken by the next page that panel builds. */
+  private readonly pendingAnchors = new Map<string, string>();
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -29,6 +33,21 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
     if (!this.activePanel?.active) return false;
     void this.activePanel.webview.postMessage({ type: 'toggleMode' });
     return true;
+  }
+
+  /** Opens a linked Markdown file rendered in the active group, scrolled to `anchor` if given. */
+  private async openMarkdown(uri: vscode.Uri, anchor: string | undefined): Promise<void> {
+    const key = uri.toString();
+    const column = vscode.window.tabGroups.activeTabGroup.viewColumn;
+    // openWith focuses a rendered panel already in the active group instead of creating one.
+    const existing = [...(this.panels.get(key) ?? [])].find((p) => p.viewColumn === column);
+    // A link is an explicit request for the rendered view, even when inkstand.enabled is false.
+    if (!existing) forceRendered.add(key);
+    // A visible page is not rebuilt, so it gets a message; a new or hidden one reads the pending anchor.
+    const message = anchor !== undefined && existing?.visible === true;
+    if (anchor !== undefined && !message) this.pendingAnchors.set(key, anchor);
+    await vscode.commands.executeCommand('vscode.openWith', uri, VIEW_TYPE);
+    if (message && existing) void existing.webview.postMessage({ type: 'reveal', id: anchor });
   }
 
   resolveCustomTextEditor(
@@ -68,7 +87,13 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
         },
       });
 
+    const key = document.uri.toString();
     const title = document.uri.path.split('/').pop() ?? '';
+    const takeAnchor = () => {
+      const anchor = this.pendingAnchors.get(key);
+      this.pendingAnchors.delete(key);
+      return anchor;
+    };
     const buildPage = () =>
       buildHtml({
         title,
@@ -78,8 +103,13 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
         nonce: randomBytes(16).toString('hex'),
         styleUri: webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'style.css')).toString(),
         scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(distRoot, 'webview.js')).toString(),
+        anchor: takeAnchor(),
       });
     webview.html = buildPage();
+
+    const siblings = this.panels.get(key) ?? new Set<vscode.WebviewPanel>();
+    siblings.add(panel);
+    this.panels.set(key, siblings);
 
     if (panel.active) this.activePanel = panel;
     let wasVisible = panel.visible;
@@ -93,7 +123,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     const changeSub = vscode.workspace.onDidChangeTextDocument((e) => {
-      if (e.document.uri.toString() !== document.uri.toString()) return;
+      if (e.document.uri.toString() !== key) return;
       clearTimeout(timer);
       timer = setTimeout(
         () => webview.postMessage({ type: 'update', html: render(), source: renderSource(document.getText()) }),
@@ -114,7 +144,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
           void vscode.env.openExternal(vscode.Uri.parse(target.url));
           break;
         case 'markdown':
-          void vscode.commands.executeCommand('vscode.openWith', resolveRelative(target.path), VIEW_TYPE);
+          void this.openMarkdown(resolveRelative(target.path), target.anchor);
           break;
         case 'file':
           void vscode.commands.executeCommand('vscode.open', resolveRelative(target.path));
@@ -126,6 +156,8 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
 
     panel.onDidDispose(() => {
       if (this.activePanel === panel) this.activePanel = undefined;
+      siblings.delete(panel);
+      if (siblings.size === 0 && this.panels.get(key) === siblings) this.panels.delete(key);
       clearTimeout(timer);
       changeSub.dispose();
       messageSub.dispose();

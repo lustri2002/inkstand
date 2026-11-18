@@ -2,6 +2,14 @@
 
 All notable changes to Inkstand are listed here.
 
+## Unreleased
+
+- **Find in the rendered view:** `Cmd+F` / `Ctrl+F` opens VS Code's find widget.
+- Links such as `other.md#section` open the file scrolled to that section, including links to a section of the same file.
+- Links to other Markdown files open in the rendered view even when `inkstand.enabled` is `false`.
+- Heading anchors follow GitHub's rules: underscores are kept (`#my_function`), so links written for GitHub work.
+- Anchor links can no longer jump to toolbar elements when a heading is named like one (e.g. "Edit").
+
 ## 0.6.0 — First public release
 
 - Opens `.md` and `.markdown` files directly in a rendered view.

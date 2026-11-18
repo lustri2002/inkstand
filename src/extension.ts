@@ -8,6 +8,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(VIEW_TYPE, provider, {
       supportsMultipleEditorsPerDocument: true,
+      // Cmd+F / Ctrl+F searches the rendered page with VS Code's own find widget.
+      webviewOptions: { enableFindWidget: true },
     }),
   );
 }

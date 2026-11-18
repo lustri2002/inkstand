@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      # One PR for all dev tooling updates, one for runtime dependencies.
+      dev-dependencies:
+        dependency-type: development
+      dependencies:
+        dependency-type: production
+    ignore:
+      # Must stay in step with engines.vscode in package.json.
+      - dependency-name: '@types/vscode'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

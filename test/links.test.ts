@@ -18,8 +18,21 @@ describe('classifyLink', () => {
     },
   );
 
-  test('markdown link drops fragment and query and decodes path', () => {
-    expect(classifyLink('docs/guida%20uno.md#sez')).toEqual({ kind: 'markdown', path: 'docs/guida uno.md' });
+  test('markdown link keeps the decoded fragment as anchor and decodes path', () => {
+    expect(classifyLink('docs/guida%20uno.md#perch%C3%A9')).toEqual({
+      kind: 'markdown',
+      path: 'docs/guida uno.md',
+      anchor: 'perché',
+    });
+  });
+
+  test('markdown link drops the query', () => {
+    expect(classifyLink('a.md?x=1#sez')).toEqual({ kind: 'markdown', path: 'a.md', anchor: 'sez' });
+    expect(classifyLink('a.md?x=1')).toEqual({ kind: 'markdown', path: 'a.md' });
+  });
+
+  test('empty fragment gives no anchor', () => {
+    expect(classifyLink('a.md#')).toEqual({ kind: 'markdown', path: 'a.md' });
   });
 
   test('markdown extension is case-insensitive', () => {
