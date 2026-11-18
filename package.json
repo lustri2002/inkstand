@@ -2,7 +2,7 @@
   "name": "inkstand",
   "displayName": "Inkstand",
   "description": "A beautiful rendered view for Markdown in VS Code: source view, table of contents, reading position and side-by-side editing.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "lustri2002",
   "license": "MIT",
   "icon": "icon.png",
@@ -89,6 +89,16 @@
           "type": "boolean",
           "default": true,
           "description": "Open Markdown files directly in the rendered view. When disabled, they open as text."
+        },
+        "inkstand.scrollSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Keep the rendered view and the text editor of the same file scrolled to the same place."
+        },
+        "inkstand.doubleClickToEdit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Double-click in the rendered view to open the text editor beside it at that line."
         }
       }
     },
@@ -104,9 +114,15 @@
     "package": "vsce package --no-dependencies"
   },
   "dependencies": {
+    "@vscode/markdown-it-katex": "^1.1.2",
     "highlight.js": "^11.12.0",
+    "katex": "^0.16.47",
     "markdown-it": "^15.0.3",
+    "markdown-it-emoji": "^3.1.0",
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-github-alerts": "^1.0.1",
     "markdown-it-task-lists": "^2.1.1",
+    "mermaid": "^12.3.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {

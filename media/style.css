@@ -214,6 +214,7 @@ body.toc-open.has-toc.mode-rendered #toc { display: block; }
 #toc-list .toc-level-3 a { padding-left: 34px; }
 
 @media (max-width: 760px) {
+  .toolbar-reading { display: none; }
   #toc {
     position: fixed;
     top: 49px;
@@ -266,7 +267,7 @@ p, ul, ol, blockquote, table, pre { margin: 0 0 1em; }
 ul, ol { padding-left: 2em; }
 li > p { margin: 0.25em 0; }
 li.task-list-item { list-style: none; margin-left: -1.4em; }
-li.task-list-item input { margin-right: 0.5em; }
+li.task-list-item input { margin-right: 0.5em; cursor: pointer; }
 
 blockquote {
   padding: 0 1em;
@@ -297,6 +298,82 @@ pre {
   overflow-x: auto;
 }
 pre code { background: none; padding: 0; font-size: 0.9em; }
+
+/* Code blocks: language label and Copy button */
+.code-block { position: relative; }
+.code-tools {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+.code-lang { opacity: 0.8; }
+.code-copy {
+  opacity: 0;
+  padding: 2px 8px;
+  font: inherit;
+  color: var(--vscode-button-secondaryForeground, inherit);
+  background: var(--vscode-button-secondaryBackground, transparent);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.code-block:hover .code-copy,
+.code-copy:focus-visible { opacity: 1; }
+.code-copy:hover { background: var(--vscode-button-secondaryHoverBackground, transparent); }
+.code-block:hover .code-lang { display: none; }
+
+/* GitHub alerts: > [!NOTE] and friends */
+.markdown-alert {
+  --alert-color: var(--vscode-editorInfo-foreground, #3794ff);
+  margin: 0 0 1em;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--alert-color);
+  background: var(--vscode-textBlockQuote-background, transparent);
+  border-radius: 0 6px 6px 0;
+}
+.markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.4em;
+  font-weight: 600;
+  color: var(--alert-color);
+}
+.markdown-alert-title svg { fill: currentColor; flex: none; }
+.markdown-alert-tip { --alert-color: var(--vscode-testing-iconPassed, #3fb950); }
+.markdown-alert-important { --alert-color: var(--vscode-charts-purple, #a371f7); }
+.markdown-alert-warning { --alert-color: var(--vscode-editorWarning-foreground, #d29922); }
+.markdown-alert-caution { --alert-color: var(--vscode-editorError-foreground, #f85149); }
+
+/* Mermaid diagrams: the source shows until the diagram is drawn, and stays if it cannot be. */
+pre.mermaid.mermaid-drawn {
+  background: transparent;
+  text-align: center;
+  white-space: normal;
+}
+pre.mermaid.mermaid-drawn svg { max-width: 100%; height: auto; }
+pre.mermaid.mermaid-error { border-left: 3px solid var(--vscode-editorError-foreground, #f85149); }
+
+/* Math (KaTeX MathML, rendered natively) */
+math { font-size: 1.1em; }
+.katex-block, p.katex-block { margin: 0 0 1em; overflow-x: auto; overflow-y: hidden; }
+.katex-error { color: var(--vscode-editorError-foreground, #f85149); }
+
+/* Footnotes */
+.footnote-ref { font-size: 0.75em; line-height: 0; }
+.footnote-ref a { padding: 0 1px; }
+hr.footnotes-sep { margin-top: 2.5em; }
+section.footnotes {
+  font-size: 0.875em;
+  color: var(--vscode-descriptionForeground);
+}
+.footnote-backref { margin-left: 0.25em; }
 
 /* Front matter */
 pre.front-matter {

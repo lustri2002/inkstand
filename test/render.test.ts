@@ -24,7 +24,7 @@ const opts = { resolveImage: (s: string) => 'vscode-resource://' + s };
 
 describe('renderMarkdown', () => {
   test('heading gets a slug id', () => {
-    expect(renderMarkdown('# Ciao', opts)).toContain('<h1 id="ciao">Ciao</h1>');
+    expect(renderMarkdown('# Ciao', opts)).toContain('<h1 data-line="0" id="ciao">Ciao</h1>');
   });
 
   test('heading slugs match GitHub: underscores kept, punctuation dropped', () => {
@@ -47,14 +47,15 @@ describe('renderMarkdown', () => {
   });
 
   test('renders tables', () => {
-    expect(renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |', opts)).toContain('<table>');
+    expect(renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |', opts)).toContain('<table data-line="0">');
   });
 
-  test('task list renders disabled checkbox', () => {
+  test('task list renders a clickable checkbox on an item with its source line', () => {
     const html = renderMarkdown('- [x] fatto', opts);
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('checked');
-    expect(html).toContain('disabled');
+    expect(html).not.toContain('disabled');
+    expect(html).toContain('<li class="task-list-item enabled" data-line="0">');
   });
 
   test('highlights known language', () => {
@@ -91,7 +92,7 @@ describe('renderMarkdown', () => {
 
   test('front matter is shown as a key/value table', () => {
     const html = renderMarkdown('---\ntitle: Demo\ntags: [prova, markdown]\n---\n# T', opts);
-    expect(html).toContain('<table class="front-matter">');
+    expect(html).toContain('<table class="front-matter" data-line="0">');
     expect(html).toContain('<th>title</th><td>Demo</td>');
     expect(html).toContain('<li>prova</li><li>markdown</li>');
     expect(html).toContain('<h1');
@@ -109,8 +110,8 @@ describe('renderMarkdown', () => {
   });
 
   test('invalid or non-object front matter falls back to a pre block', () => {
-    expect(renderMarkdown('---\nfoo: [unclosed\n---\n', opts)).toContain('<pre class="front-matter">foo: [unclosed</pre>');
-    expect(renderMarkdown('---\njust text\n---\n', opts)).toContain('<pre class="front-matter">just text</pre>');
+    expect(renderMarkdown('---\nfoo: [unclosed\n---\n', opts)).toContain('<pre class="front-matter" data-line="0">foo: [unclosed</pre>');
+    expect(renderMarkdown('---\njust text\n---\n', opts)).toContain('<pre class="front-matter" data-line="0">just text</pre>');
   });
 
   test('lone --- is a horizontal rule', () => {
@@ -119,6 +120,79 @@ describe('renderMarkdown', () => {
 
   test('empty source gives empty output', () => {
     expect(renderMarkdown('', opts)).toBe('');
+  });
+
+  test('blocks carry their 0-based source line', () => {
+    const html = renderMarkdown('# T\n\npara\n\n- a\n- b\n\n```ts\nx\n```', opts);
+    expect(html).toContain('<h1 data-line="0" id="t">');
+    expect(html).toContain('<p data-line="2">');
+    expect(html).toContain('<li data-line="5">');
+    expect(html).toMatch(/<pre class="hljs" data-line="7" data-lang="ts"><code class="language-ts">/);
+  });
+
+  test('source lines count the front matter', () => {
+    const html = renderMarkdown('---\ntitle: Demo\n---\n# T\n\npara', opts);
+    expect(html).toContain('<table class="front-matter" data-line="0">');
+    expect(html).toContain('<h1 data-line="3" id="t">');
+    expect(html).toContain('<p data-line="5">');
+  });
+
+  test('fence without a known language is escaped without hljs class', () => {
+    expect(renderMarkdown('```\n<b>\n```', opts)).toContain('<pre data-line="0"><code>&lt;b&gt;\n</code></pre>');
+  });
+
+  test('GitHub alerts render with a title', () => {
+    const html = renderMarkdown('> [!WARNING]\n> Mind the gap', opts);
+    expect(html).toContain('class="markdown-alert markdown-alert-warning"');
+    expect(html).toContain('Warning');
+    expect(html).toContain('Mind the gap');
+    expect(html).not.toContain('[!WARNING]');
+  });
+
+  test('plain blockquotes stay blockquotes', () => {
+    expect(renderMarkdown('> just a quote', opts)).toContain('<blockquote');
+  });
+
+  test('footnotes render a reference and a note with back link', () => {
+    const html = renderMarkdown('Text[^1]\n\n[^1]: The note.', opts);
+    expect(html).toContain('class="footnote-ref"');
+    expect(html).toContain('href="#fn1"');
+    expect(html).toContain('class="footnotes"');
+    expect(html).toContain('The note.');
+    expect(html).toContain('href="#fnref1"');
+  });
+
+  test('emoji shortcodes become emoji, text smileys do not', () => {
+    const html = renderMarkdown('Done :tada: :)', opts);
+    expect(html).toContain('🎉');
+    expect(html).toContain(':)');
+  });
+
+  test('inline and display math render as MathML', () => {
+    const inline = renderMarkdown('Area $\\pi r^2$ here', opts);
+    expect(inline).toContain('<math');
+    expect(inline).toContain('<mi>π</mi>');
+    expect(renderMarkdown('$$\nE = mc^2\n$$', opts)).toContain('display="block"');
+  });
+
+  test('math fences render as display MathML', () => {
+    const html = renderMarkdown('```math\nx^2\n```', opts);
+    expect(html).toContain('<div class="katex-block" data-line="0">');
+    expect(html).toContain('display="block"');
+  });
+
+  test('invalid math is shown in place without throwing', () => {
+    expect(renderMarkdown('$\\frac{1}{$', opts)).toContain('katex-error');
+  });
+
+  test('dollar amounts are not math', () => {
+    expect(renderMarkdown('It costs $5 and $10.', opts)).not.toContain('<math');
+  });
+
+  test('mermaid fences keep their escaped source for the webview', () => {
+    expect(renderMarkdown('```mermaid\ngraph TD; A-->B<x>\n```', opts)).toContain(
+      '<pre class="mermaid" data-line="0">graph TD; A--&gt;B&lt;x&gt;\n</pre>',
+    );
   });
 
   test('1 MB document renders', () => {
