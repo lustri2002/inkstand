@@ -165,10 +165,14 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
     });
 
     const messageSub = webview.onDidReceiveMessage((message: unknown) => {
-      const m = message as { type?: string; href?: unknown; line?: unknown; checked?: unknown };
+      const m = message as { type?: string; href?: unknown; line?: unknown; checked?: unknown; text?: unknown };
       const line = typeof m?.line === 'number' && Number.isFinite(m.line) ? Math.max(0, Math.floor(m.line)) : undefined;
       if (m?.type === 'edit' || (m?.type === 'dblclick' && setting('doubleClickToEdit', true))) {
         void vscode.commands.executeCommand('inkstand.editSource', { line });
+        return;
+      }
+      if (m?.type === 'copy') {
+        if (typeof m.text === 'string') void vscode.env.clipboard.writeText(m.text);
         return;
       }
       if (m?.type === 'toggleTask') {

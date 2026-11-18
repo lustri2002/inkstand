@@ -30,6 +30,39 @@ const tocList = document.getElementById('toc-list')!;
 const fileTitle = crumb.dataset.title ?? '';
 const mermaidUrl = body.dataset.mermaid ?? '';
 
+/** Wraps each code block with its language and a Copy button (the extension writes the clipboard). */
+function addCodeTools(): void {
+  for (const pre of content.querySelectorAll<HTMLElement>('pre:not(.mermaid):not(.front-matter)')) {
+    const code = pre.querySelector('code');
+    if (!code || pre.parentElement?.classList.contains('code-block')) continue;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+    const tools = document.createElement('div');
+    tools.className = 'code-tools';
+    if (pre.dataset.lang) {
+      const lang = document.createElement('span');
+      lang.className = 'code-lang';
+      lang.textContent = pre.dataset.lang;
+      tools.append(lang);
+    }
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'code-copy';
+    copy.textContent = 'Copy';
+    copy.setAttribute('aria-label', 'Copy code');
+    let reset: ReturnType<typeof setTimeout> | undefined;
+    copy.addEventListener('click', () => {
+      vscode.postMessage({ type: 'copy', text: code.textContent ?? '' });
+      copy.textContent = 'Copied';
+      clearTimeout(reset);
+      reset = setTimeout(() => (copy.textContent = 'Copy'), 1500);
+    });
+    tools.append(copy);
+    pre.replaceWith(wrapper);
+    wrapper.append(tools, pre);
+  }
+}
+
 function drawDiagrams(): void {
   void renderDiagrams(content, mermaidUrl, nonce).then(updateIndicators);
 }
@@ -169,6 +202,7 @@ function setToc(open: boolean): void {
 
 countLines();
 buildToc();
+addCodeTools();
 drawDiagrams();
 watchTheme(drawDiagrams);
 applyToc();
@@ -253,6 +287,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     scrollToY(y);
     countLines();
     buildToc();
+    addCodeTools();
     drawDiagrams();
     updateIndicators();
   } else if (message?.type === 'toggleMode') {
