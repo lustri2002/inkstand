@@ -298,6 +298,34 @@ pre {
 }
 pre code { background: none; padding: 0; font-size: 0.9em; }
 
+/* Code blocks: language label and Copy button */
+.code-block { position: relative; }
+.code-tools {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+.code-lang { opacity: 0.8; }
+.code-copy {
+  opacity: 0;
+  padding: 2px 8px;
+  font: inherit;
+  color: var(--vscode-button-secondaryForeground, inherit);
+  background: var(--vscode-button-secondaryBackground, transparent);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.code-block:hover .code-copy,
+.code-copy:focus-visible { opacity: 1; }
+.code-copy:hover { background: var(--vscode-button-secondaryHoverBackground, transparent); }
+.code-block:hover .code-lang { display: none; }
+
 /* GitHub alerts: > [!NOTE] and friends */
 .markdown-alert {
   --alert-color: var(--vscode-editorInfo-foreground, #3794ff);
