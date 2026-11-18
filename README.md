@@ -17,11 +17,15 @@
 - **Opens rendered by default.** `.md` and `.markdown` files open straight into the rendered view — no raw `#` and `**` first.
 - **Rendered / Source switch.** Flip between the rendered page and the highlighted Markdown source in the same panel. Each mode remembers its scroll position.
 - **Table of contents.** The **Contents** button opens a side panel with the H1–H3 headings. The current section is highlighted and clicking a heading jumps to it.
-- **Reading position.** The toolbar shows the section you are in (e.g. `Release checklist › Before the freeze`) and how far you have read (`Position 46%`).
-- **Side-by-side editing.** The pencil opens VS Code's text editor next to the rendered view, which updates live as you type. Close the text tab when you are done.
+- **Reading position.** The toolbar shows the section you are in (e.g. `Release checklist › Before the freeze`), how far you have read (`Position 46%`) and the reading time (`6 min read`, with the word count on hover).
+- **Side-by-side editing.** The pencil opens VS Code's text editor next to the rendered view, at the line you are reading. The rendered view updates live as you type, and the two stay scrolled to the same place. Double-click a paragraph to jump to its source. Close the text tab when you are done.
 - **Follows your theme.** Colors and fonts come from your VS Code theme, including high-contrast themes.
+- **Clickable task lists.** Ticking a `- [ ]` box writes `[x]` into the file (undo with `Cmd+Z` / `Ctrl+Z`, save as usual).
+- **GitHub extras:** alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), footnotes (`[^1]`) and emoji shortcodes (`:tada:`).
+- **Diagrams and math.** ` ```mermaid ` blocks are drawn as Mermaid diagrams (in the theme's light or dark style), and `$inline$`, `$$display$$` and ` ```math ` blocks are typeset with KaTeX.
+- **Code blocks** are highlighted, labelled with their language and have a **Copy** button.
 - **YAML front matter** is shown as a tidy key/value table.
-- **Safe by default.** Raw HTML inside Markdown is shown as text, scripts never run, and only HTTPS remote images are loaded.
+- **Safe by default.** Raw HTML inside Markdown is shown as text, only Inkstand's own scripts run, Mermaid draws in strict mode, and only HTTPS remote images are loaded.
 
 ## Usage
 
@@ -30,6 +34,7 @@
 | Switch Rendered / Source | Click the switch in the toolbar, or `Cmd+Alt+M` (`Ctrl+Alt+M` on Windows/Linux) |
 | Show or hide the table of contents | Click **Contents** |
 | Edit the file | Click the pencil: the text editor opens beside the rendered view |
+| Jump to the source of a paragraph | Double-click it |
 | Go back from the text editor | Close the text tab, click the eye icon (**Back to Rendered View**) or press `Cmd+Alt+M` |
 
 ### Commands
@@ -43,6 +48,8 @@
 | Setting | Default | Description |
 |---|---|---|
 | `inkstand.enabled` | `true` | Open Markdown files directly in the rendered view. When `false`, they open as text and Inkstand is used only when you ask for it. |
+| `inkstand.scrollSync` | `true` | Keep the rendered view and the text editor scrolled to the same place. |
+| `inkstand.doubleClickToEdit` | `true` | Double-click in the rendered view to open the text editor at that line. |
 
 Inkstand also hides VS Code's editor-type dropdown in the breadcrumbs (`breadcrumbs.showEditorType`) by default. Set it back to `true` in your settings if you want it.
 

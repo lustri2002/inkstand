@@ -1,7 +1,18 @@
 import MarkdownIt from 'markdown-it';
 import taskLists from 'markdown-it-task-lists';
+import githubAlerts from 'markdown-it-github-alerts';
+import footnote from 'markdown-it-footnote';
+import { full as emoji } from 'markdown-it-emoji';
 import hljs from 'highlight.js';
+import katex from 'katex';
+import mathPlugin from '@vscode/markdown-it-katex';
 import { parse as parseYaml } from 'yaml';
+
+/**
+ * KaTeX writes MathML only: the webview renders it natively, with no KaTeX stylesheet or fonts to ship.
+ * Errors are shown in place instead of breaking the page.
+ */
+const KATEX_OPTIONS = { output: 'mathml', throwOnError: false } as const;
 
 /** Above this size the source view is escaped but not highlighted, to keep updates fast. */
 const SOURCE_HIGHLIGHT_LIMIT = 500_000;
@@ -28,7 +39,7 @@ function renderFrontMatter(raw: string): string {
     data = undefined;
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    return `<pre class="front-matter">${escapeHtml(raw)}</pre>\n`;
+    return `<pre class="front-matter" data-line="0">${escapeHtml(raw)}</pre>\n`;
   }
   const cell = (value: unknown): string => {
     if (Array.isArray(value) && value.every((v) => v === null || typeof v !== 'object')) {
@@ -40,8 +51,14 @@ function renderFrontMatter(raw: string): string {
   const rows = Object.entries(data)
     .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${cell(value)}</td></tr>`)
     .join('');
-  return `<table class="front-matter"><tbody>${rows}</tbody></table>\n`;
+  return `<table class="front-matter" data-line="0"><tbody>${rows}</tbody></table>\n`;
 }
+
+// A type alias, not an interface, so that it fits markdown-it's index-signature Env type.
+type RenderEnv = {
+  /** Lines removed from the top of the file (the front matter) before rendering. */
+  lineOffset?: number;
+};
 
 export interface RenderOptions {
   /** Receives the decoded relative image path; returns the URL to use, or undefined to drop the image. */
@@ -60,18 +77,48 @@ function slugify(text: string): string {
 }
 
 function createMarkdown(options: RenderOptions): InstanceType<typeof MarkdownIt> {
-  const md = new MarkdownIt({
-    html: false,
-    linkify: true,
-    highlight(code, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        const value = hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
-        return `<pre class="hljs"><code>${value}</code></pre>`;
+  const md = new MarkdownIt({ html: false, linkify: true });
+  // Clicking a box writes the change to the file (see editorProvider).
+  md.use(taskLists, { enabled: true });
+  // > [!NOTE], > [!TIP], > [!IMPORTANT], > [!WARNING], > [!CAUTION]
+  md.use(githubAlerts);
+  md.use(footnote);
+  // :tada: becomes 🎉 like on GitHub; text smileys such as :) stay as they are.
+  md.use(emoji, { shortcuts: {} });
+  // $inline$ and $$display$$ math. ```math fences are handled by the fence renderer below.
+  md.use(mathPlugin, KATEX_OPTIONS as Parameters<typeof mathPlugin>[1]);
+
+  // Source line of each block (0-based, counted in the whole file), used to sync scrolling with the
+  // text editor and to jump from the rendered page to the source.
+  md.core.ruler.push('source_lines', (state) => {
+    const offset = (state.env as RenderEnv).lineOffset ?? 0;
+    for (const token of state.tokens) {
+      if (token.map && token.block && token.nesting >= 0 && token.type !== 'inline') {
+        token.attrSet('data-line', String(token.map[0] + offset));
       }
-      return '';
-    },
+    }
   });
-  md.use(taskLists, { enabled: false });
+
+  md.renderer.rules.fence = (tokens, idx) => {
+    const token = tokens[idx];
+    const lang = md.utils.unescapeAll(token.info).trim().split(/\s+/)[0] ?? '';
+    const line = token.attrGet('data-line');
+    const lineAttr = line === null ? '' : ` data-line="${line}"`;
+    const kind = lang.toLowerCase();
+    // Drawn by the webview (src/webview/diagrams.ts); until then, and if it fails, the source shows.
+    if (kind === 'mermaid') return `<pre class="mermaid"${lineAttr}>${escapeHtml(token.content)}</pre>\n`;
+    if (kind === 'math') {
+      const math = katex.renderToString(token.content, { ...KATEX_OPTIONS, displayMode: true });
+      return `<div class="katex-block"${lineAttr}>${math}</div>\n`;
+    }
+    const known = lang !== '' && hljs.getLanguage(lang) !== undefined;
+    const code = known
+      ? hljs.highlight(token.content, { language: lang, ignoreIllegals: true }).value
+      : escapeHtml(token.content);
+    const langAttrs = lang ? ` data-lang="${escapeHtml(lang)}"` : '';
+    const codeClass = lang ? ` class="language-${escapeHtml(lang)}"` : '';
+    return `<pre${known ? ' class="hljs"' : ''}${lineAttr}${langAttrs}><code${codeClass}>${code}</code></pre>\n`;
+  };
 
   md.core.ruler.push('heading_ids', (state) => {
     const seen = new Map<string, number>();
@@ -121,5 +168,6 @@ export function renderMarkdown(source: string, options: RenderOptions): string {
   const md = createMarkdown(options);
   const match = FRONT_MATTER.exec(source);
   if (!match) return md.render(source);
-  return renderFrontMatter(match[1]) + md.render(source.slice(match[0].length));
+  const env: RenderEnv = { lineOffset: match[0].split('\n').length - 1 };
+  return renderFrontMatter(match[1]) + md.render(source.slice(match[0].length), env);
 }

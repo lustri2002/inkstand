@@ -2,12 +2,28 @@
 
 All notable changes to Inkstand are listed here.
 
-## Unreleased
+## 0.7.0 — Scroll sync, diagrams and math
 
+### New
+
+- **Scroll sync:** the rendered view and the text editor beside it stay scrolled to the same place (`inkstand.scrollSync`). The pencil opens the text editor at the line you are reading.
+- **Double-click to edit:** double-click a paragraph to open the text editor at its source line (`inkstand.doubleClickToEdit`).
+- **Clickable task lists:** ticking a box in the rendered view writes `[x]` / `[ ]` into the file.
+- **Mermaid diagrams** (` ```mermaid `), loaded only for pages that have one and following the light or dark theme.
+- **Math** with KaTeX: `$inline$`, `$$display$$` and ` ```math ` blocks.
+- **GitHub alerts** (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), **footnotes** and **emoji shortcodes** (`:tada:`).
+- **Copy button** and language label on code blocks.
+- **Reading time** in the toolbar (`6 min read`), with the word count on hover. Code, diagrams and formulas are not counted.
 - **Find in the rendered view:** `Cmd+F` / `Ctrl+F` opens VS Code's find widget.
+
+### Improved
+
 - Links such as `other.md#section` open the file scrolled to that section, including links to a section of the same file.
 - Links to other Markdown files open in the rendered view even when `inkstand.enabled` is `false`.
-- Heading anchors follow GitHub's rules: underscores are kept (`#my_function`), so links written for GitHub work.
+- Heading anchors follow GitHub's rules: underscores are kept (`#my_function`), so links written for GitHub work. Links written for the old anchors of such headings need updating.
+
+### Fixed
+
 - Anchor links can no longer jump to toolbar elements when a heading is named like one (e.g. "Edit").
 
 ## 0.6.0 — First public release

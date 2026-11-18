@@ -1,4 +1,7 @@
+import { copyFile, mkdir } from 'node:fs/promises';
 import { build } from 'esbuild';
+
+await mkdir('dist', { recursive: true });
 
 await Promise.all([
   // Extension host
@@ -21,4 +24,6 @@ await Promise.all([
     format: 'iife',
     target: 'es2022',
   }),
+  // Mermaid is loaded by the webview only for pages with a diagram, so it ships as its own file.
+  copyFile('node_modules/mermaid/dist/mermaid.min.js', 'dist/mermaid.min.js'),
 ]);
