@@ -199,6 +199,14 @@ for (const type of ['wheel', 'keydown', 'touchstart', 'mousedown']) {
   window.addEventListener(type, () => (pinnedHeading = undefined), { passive: true });
 }
 
+// Task list boxes: the extension writes the change to the file, which then re-renders the page.
+content.addEventListener('change', (event) => {
+  const box = event.target;
+  if (!(box instanceof HTMLInputElement) || !box.classList.contains('task-list-item-checkbox')) return;
+  const item = box.closest<HTMLElement>('li[data-line]');
+  if (item) vscode.postMessage({ type: 'toggleTask', line: Number(item.dataset.line), checked: box.checked });
+});
+
 content.addEventListener('dblclick', (event) => {
   const target = event.target instanceof Element ? event.target : null;
   if (!target || target.closest('a, input, button')) return;

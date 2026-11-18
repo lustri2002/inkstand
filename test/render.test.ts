@@ -50,11 +50,12 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |', opts)).toContain('<table data-line="0">');
   });
 
-  test('task list renders disabled checkbox', () => {
+  test('task list renders a clickable checkbox on an item with its source line', () => {
     const html = renderMarkdown('- [x] fatto', opts);
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('checked');
-    expect(html).toContain('disabled');
+    expect(html).not.toContain('disabled');
+    expect(html).toContain('<li class="task-list-item enabled" data-line="0">');
   });
 
   test('highlights known language', () => {
