@@ -27,6 +27,15 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('# Ciao', opts)).toContain('<h1 id="ciao">Ciao</h1>');
   });
 
+  test('heading slugs match GitHub: underscores kept, punctuation dropped', () => {
+    expect(renderMarkdown('## my_function()', opts)).toContain('id="my_function"');
+    expect(renderMarkdown('## Q&A: why?', opts)).toContain('id="qa-why"');
+  });
+
+  test('heading slug keeps combining marks', () => {
+    expect(renderMarkdown('## Café', opts)).toContain('id="café"');
+  });
+
   test('accented heading keeps accents in id', () => {
     expect(renderMarkdown('## Perché sì', opts)).toContain('id="perché-sì"');
   });
