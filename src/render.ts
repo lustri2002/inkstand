@@ -4,7 +4,15 @@ import githubAlerts from 'markdown-it-github-alerts';
 import footnote from 'markdown-it-footnote';
 import { full as emoji } from 'markdown-it-emoji';
 import hljs from 'highlight.js';
+import katex from 'katex';
+import mathPlugin from '@vscode/markdown-it-katex';
 import { parse as parseYaml } from 'yaml';
+
+/**
+ * KaTeX writes MathML only: the webview renders it natively, with no KaTeX stylesheet or fonts to ship.
+ * Errors are shown in place instead of breaking the page.
+ */
+const KATEX_OPTIONS = { output: 'mathml', throwOnError: false } as const;
 
 /** Above this size the source view is escaped but not highlighted, to keep updates fast. */
 const SOURCE_HIGHLIGHT_LIMIT = 500_000;
@@ -77,6 +85,8 @@ function createMarkdown(options: RenderOptions): InstanceType<typeof MarkdownIt>
   md.use(footnote);
   // :tada: becomes 🎉 like on GitHub; text smileys such as :) stay as they are.
   md.use(emoji, { shortcuts: {} });
+  // $inline$ and $$display$$ math. ```math fences are handled by the fence renderer below.
+  md.use(mathPlugin, KATEX_OPTIONS as Parameters<typeof mathPlugin>[1]);
 
   // Source line of each block (0-based, counted in the whole file), used to sync scrolling with the
   // text editor and to jump from the rendered page to the source.
@@ -94,6 +104,13 @@ function createMarkdown(options: RenderOptions): InstanceType<typeof MarkdownIt>
     const lang = md.utils.unescapeAll(token.info).trim().split(/\s+/)[0] ?? '';
     const line = token.attrGet('data-line');
     const lineAttr = line === null ? '' : ` data-line="${line}"`;
+    const kind = lang.toLowerCase();
+    // Drawn by the webview (src/webview/diagrams.ts); until then, and if it fails, the source shows.
+    if (kind === 'mermaid') return `<pre class="mermaid"${lineAttr}>${escapeHtml(token.content)}</pre>\n`;
+    if (kind === 'math') {
+      const math = katex.renderToString(token.content, { ...KATEX_OPTIONS, displayMode: true });
+      return `<div class="katex-block"${lineAttr}>${math}</div>\n`;
+    }
     const known = lang !== '' && hljs.getLanguage(lang) !== undefined;
     const code = known
       ? hljs.highlight(token.content, { language: lang, ignoreIllegals: true }).value

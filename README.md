@@ -22,8 +22,9 @@
 - **Follows your theme.** Colors and fonts come from your VS Code theme, including high-contrast themes.
 - **Clickable task lists.** Ticking a `- [ ]` box writes `[x]` into the file (undo with `Cmd+Z` / `Ctrl+Z`, save as usual).
 - **GitHub extras:** alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), footnotes (`[^1]`) and emoji shortcodes (`:tada:`).
+- **Diagrams and math.** ` ```mermaid ` blocks are drawn as Mermaid diagrams (in the theme's light or dark style), and `$inline$`, `$$display$$` and ` ```math ` blocks are typeset with KaTeX.
 - **YAML front matter** is shown as a tidy key/value table.
-- **Safe by default.** Raw HTML inside Markdown is shown as text, scripts never run, and only HTTPS remote images are loaded.
+- **Safe by default.** Raw HTML inside Markdown is shown as text, only Inkstand's own scripts run, Mermaid draws in strict mode, and only HTTPS remote images are loaded.
 
 ## Usage
 

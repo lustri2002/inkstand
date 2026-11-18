@@ -15,13 +15,17 @@ export function buildHtml(a: {
   nonce: string;
   styleUri: string;
   scriptUri: string;
+  /** Mermaid's script, loaded by the webview only when the page has a diagram. */
+  mermaidUri: string;
   /** Heading id to scroll to once the page has loaded. */
   anchor?: string;
 }): string {
   const anchorAttr = a.anchor ? ` data-anchor="${escapeHtml(a.anchor)}"` : '';
+  // Scripts run only with the nonce. Inline styles are allowed because Mermaid's SVGs carry their own
+  // <style> and style attributes; Markdown cannot add any, since raw HTML is escaped.
   const csp =
     `default-src 'none'; img-src ${a.cspSource} https: data:; ` +
-    `style-src ${a.cspSource}; font-src ${a.cspSource}; script-src 'nonce-${a.nonce}'`;
+    `style-src ${a.cspSource} 'unsafe-inline'; font-src ${a.cspSource}; script-src 'nonce-${a.nonce}'`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +34,7 @@ export function buildHtml(a: {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${a.styleUri}">
 </head>
-<body class="mode-rendered"${anchorAttr}>
+<body class="mode-rendered" data-mermaid="${escapeHtml(a.mermaidUri)}"${anchorAttr}>
 <header class="toolbar">
 <div class="toolbar-status">
 <span id="breadcrumb" class="toolbar-title" data-title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</span>
