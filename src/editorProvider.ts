@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import * as vscode from 'vscode';
 import { classifyLink } from './links';
 import { renderMarkdown, renderSource } from './render';
+import { readViewSettings } from './settings';
 import { setTaskChecked } from './tasks';
 import { buildHtml } from './webviewHtml';
 
@@ -94,6 +95,10 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       });
 
     const key = document.uri.toString();
+    const viewSettings = () => {
+      const config = vscode.workspace.getConfiguration('inkstand', document.uri);
+      return readViewSettings((name) => config.get(name));
+    };
     const title = document.uri.path.split('/').pop() ?? '';
     const takeAnchor = () => {
       const anchor = this.pendingAnchors.get(key);
@@ -110,6 +115,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
         styleUri: webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'style.css')).toString(),
         scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(distRoot, 'webview.js')).toString(),
         mermaidUri: webview.asWebviewUri(vscode.Uri.joinPath(distRoot, 'mermaid.min.js')).toString(),
+        settings: viewSettings(),
         anchor: takeAnchor(),
       });
     webview.html = buildPage();
@@ -150,6 +156,13 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       edit.replace(document.uri, document.lineAt(line).range, updated);
       if (!(await vscode.workspace.applyEdit(edit))) void refresh();
     };
+
+    // Reading settings apply to open pages as soon as they change.
+    const configSub = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('inkstand', document.uri)) {
+        void webview.postMessage({ type: 'settings', settings: viewSettings() });
+      }
+    });
 
     // Scroll sync: the text editor's first visible line drives the preview, and the other way round.
     let ignoreEditorUntil = 0;
@@ -213,6 +226,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
       changeSub.dispose();
       messageSub.dispose();
       rangesSub.dispose();
+      configSub.dispose();
       viewStateSub.dispose();
     });
   }

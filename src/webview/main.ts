@@ -2,6 +2,7 @@ import { activeIndex, breadcrumb, scrollPercent } from './outline';
 import { type LineBlock, lineToOffset, offsetToLine } from './scrollSync';
 import { renderDiagrams, watchTheme } from './diagrams';
 import { countWords, readingMinutes } from './stats';
+import { DEFAULT_VIEW_SETTINGS, type ViewSettings } from '../settings';
 
 declare function acquireVsCodeApi(): {
   getState(): unknown;
@@ -83,12 +84,33 @@ function drawDiagrams(): void {
   void renderDiagrams(content, mermaidUrl, nonce).then(updateIndicators);
 }
 
+function readSettings(): ViewSettings {
+  try {
+    return { ...DEFAULT_VIEW_SETTINGS, ...(JSON.parse(body.dataset.settings ?? '{}') as Partial<ViewSettings>) };
+  } catch {
+    return { ...DEFAULT_VIEW_SETTINGS };
+  }
+}
+let settings = readSettings();
+
+// The default view and Contents panel apply only the first time; afterwards the saved state wins.
 const saved = (vscode.getState() ?? {}) as Partial<State>;
 const state: State = {
-  mode: saved.mode === 'source' ? 'source' : 'rendered',
+  mode: saved.mode === 'source' || saved.mode === 'rendered' ? saved.mode : settings.defaultMode,
   scroll: { rendered: 0, source: 0, ...saved.scroll },
-  toc: saved.toc === true,
+  toc: typeof saved.toc === 'boolean' ? saved.toc : settings.tocOpen,
 };
+
+/** Text column width, font and line height, as CSS variables used by style.css. */
+function applySettings(): void {
+  const style = body.style;
+  style.setProperty('--ink-width', settings.contentWidth > 0 ? `${settings.contentWidth}px` : 'none');
+  if (settings.fontFamily) style.setProperty('--ink-font', settings.fontFamily);
+  else style.removeProperty('--ink-font');
+  if (settings.fontSize > 0) style.setProperty('--ink-font-size', `${settings.fontSize}px`);
+  else style.removeProperty('--ink-font-size');
+  style.setProperty('--ink-line-height', String(settings.lineHeight));
+}
 
 let headings: HTMLElement[] = [];
 let tocLinks: HTMLAnchorElement[] = [];
@@ -129,7 +151,8 @@ function currentLine(): number | undefined {
 const levelOf = (h: HTMLElement) => Number(h.tagName.slice(1));
 
 function buildToc(): void {
-  headings = Array.from(content.querySelectorAll<HTMLElement>('h1[id], h2[id], h3[id]'));
+  const selector = Array.from({ length: settings.tocDepth }, (_, i) => `h${i + 1}[id]`).join(', ');
+  headings = Array.from(content.querySelectorAll<HTMLElement>(selector));
   tocList.replaceChildren(
     ...headings.map((heading) => {
       const item = document.createElement('li');
@@ -216,6 +239,7 @@ function setToc(open: boolean): void {
   save();
 }
 
+applySettings();
 countLines();
 buildToc();
 updateReading();
@@ -295,7 +319,15 @@ content.addEventListener('click', (event) => {
 
 window.addEventListener('message', (event: MessageEvent) => {
   const message = event.data as
-    | { type?: string; html?: string; source?: string; id?: string; line?: number; lineCount?: number }
+    | {
+        type?: string;
+        html?: string;
+        source?: string;
+        id?: string;
+        line?: number;
+        lineCount?: number;
+        settings?: Partial<ViewSettings>;
+      }
     | undefined;
   if (message?.type === 'update') {
     const y = window.scrollY;
@@ -310,6 +342,11 @@ window.addEventListener('message', (event: MessageEvent) => {
     updateIndicators();
   } else if (message?.type === 'toggleMode') {
     setMode(state.mode === 'rendered' ? 'source' : 'rendered');
+  } else if (message?.type === 'settings' && message.settings) {
+    settings = { ...DEFAULT_VIEW_SETTINGS, ...message.settings };
+    applySettings();
+    buildToc();
+    updateIndicators();
   } else if (message?.type === 'reveal' && typeof message.id === 'string') {
     reveal(message.id);
   } else if (message?.type === 'syncScroll' && typeof message.line === 'number' && state.mode === 'rendered') {

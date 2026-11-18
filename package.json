@@ -88,17 +88,84 @@
         "inkstand.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Open Markdown files directly in the rendered view. When disabled, they open as text."
+          "description": "Open Markdown files directly in the rendered view. When disabled, they open as text.",
+          "order": 0
+        },
+        "inkstand.defaultMode": {
+          "type": "string",
+          "enum": [
+            "rendered",
+            "source"
+          ],
+          "enumDescriptions": [
+            "The rendered page.",
+            "The highlighted Markdown source."
+          ],
+          "default": "rendered",
+          "description": "View a Markdown file opens in the first time. Afterwards each tab remembers the view you chose.",
+          "order": 1
+        },
+        "inkstand.tocOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open the Contents panel the first time a file opens. Afterwards each tab remembers whether you closed it.",
+          "order": 2
+        },
+        "inkstand.tocDepth": {
+          "type": "number",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "default": 3,
+          "description": "Deepest heading level listed in Contents and in the toolbar's section path (3 = H1–H3).",
+          "order": 3
+        },
+        "inkstand.contentWidth": {
+          "type": "number",
+          "default": 860,
+          "minimum": 0,
+          "maximum": 4000,
+          "markdownDescription": "Maximum width of the text column, in pixels (480–4000). `0` uses the whole panel width.",
+          "order": 4
+        },
+        "inkstand.fontFamily": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Font for the rendered text, as a CSS font list (e.g. `Georgia, serif`). Empty uses VS Code's interface font.",
+          "order": 5
+        },
+        "inkstand.fontSize": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 40,
+          "markdownDescription": "Font size of the rendered text, in pixels (8–40). `0` uses VS Code's interface font size.",
+          "order": 6
+        },
+        "inkstand.lineHeight": {
+          "type": "number",
+          "default": 1.65,
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Line height of the rendered text, as a multiple of the font size.",
+          "order": 7
         },
         "inkstand.scrollSync": {
           "type": "boolean",
           "default": true,
-          "description": "Keep the rendered view and the text editor of the same file scrolled to the same place."
+          "description": "Keep the rendered view and the text editor of the same file scrolled to the same place.",
+          "order": 8
         },
         "inkstand.doubleClickToEdit": {
           "type": "boolean",
           "default": true,
-          "description": "Double-click in the rendered view to open the text editor beside it at that line."
+          "description": "Double-click in the rendered view to open the text editor beside it at that line.",
+          "order": 9
         }
       }
     },

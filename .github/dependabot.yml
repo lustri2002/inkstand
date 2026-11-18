@@ -13,6 +13,9 @@ updates:
     ignore:
       # Must stay in step with engines.vscode in package.json.
       - dependency-name: '@types/vscode'
+      # @vscode/markdown-it-katex declares katex ^0.16 as a peer dependency; lift this when it moves on.
+      - dependency-name: katex
+        versions: ['>=0.17.0']
 
   - package-ecosystem: github-actions
     directory: /

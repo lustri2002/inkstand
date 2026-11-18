@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { buildHtml } from '../src/webviewHtml';
+import { DEFAULT_VIEW_SETTINGS } from '../src/settings';
 
 const html = buildHtml({
   title: 'demo <x>.md',
@@ -10,6 +11,7 @@ const html = buildHtml({
   styleUri: 'vscode-resource://style.css',
   scriptUri: 'vscode-resource://webview.js',
   mermaidUri: 'vscode-resource://mermaid.min.js',
+  settings: { ...DEFAULT_VIEW_SETTINGS, fontFamily: '"Iowan Old Style", serif' },
 });
 
 describe('buildHtml', () => {
@@ -23,6 +25,13 @@ describe('buildHtml', () => {
     const scriptSrc = /script-src ([^;"]*)/.exec(html)?.[1];
     expect(scriptSrc).toBe("'nonce-abc'");
     expect(html).not.toContain('unsafe-eval');
+  });
+
+  test('passes the reading settings as escaped JSON on the body', () => {
+    const attr = /data-settings="([^"]*)"/.exec(html)?.[1] ?? '';
+    expect(attr).toContain('&quot;contentWidth&quot;:860');
+    const json = attr.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    expect(JSON.parse(json)).toEqual({ ...DEFAULT_VIEW_SETTINGS, fontFamily: '"Iowan Old Style", serif' });
   });
 
   test('passes the escaped Mermaid script URL on the body', () => {
@@ -55,9 +64,10 @@ describe('buildHtml', () => {
       styleUri: 's',
       scriptUri: 'j',
       mermaidUri: 'm',
+      settings: DEFAULT_VIEW_SETTINGS,
       anchor: 'a"b<c',
     });
-    expect(withAnchor).toContain('<body class="mode-rendered" data-mermaid="m" data-anchor="a&quot;b&lt;c">');
+    expect(withAnchor).toMatch(/<body class="mode-rendered" data-mermaid="m" data-settings="[^"]*" data-anchor="a&quot;b&lt;c">/);
   });
 
   test('toolbar has the position indicator', () => {

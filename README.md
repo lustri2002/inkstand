@@ -45,9 +45,18 @@
 
 ### Settings
 
+Reading settings (width, font, size, line height, Contents depth) apply to open tabs as soon as you change them.
+
 | Setting | Default | Description |
 |---|---|---|
 | `inkstand.enabled` | `true` | Open Markdown files directly in the rendered view. When `false`, they open as text and Inkstand is used only when you ask for it. |
+| `inkstand.defaultMode` | `rendered` | View a file opens in the first time: `rendered` or `source`. Afterwards each tab remembers your choice. |
+| `inkstand.tocOpen` | `false` | Open the Contents panel the first time a file opens. |
+| `inkstand.tocDepth` | `3` | Deepest heading level in Contents and in the toolbar's section path (1–6). |
+| `inkstand.contentWidth` | `860` | Maximum width of the text column in pixels; `0` uses the whole panel. |
+| `inkstand.fontFamily` | `""` | Font for the rendered text, e.g. `Georgia, serif`. Empty uses VS Code's interface font. |
+| `inkstand.fontSize` | `0` | Font size of the rendered text in pixels; `0` uses VS Code's interface font size. |
+| `inkstand.lineHeight` | `1.65` | Line height of the rendered text. |
 | `inkstand.scrollSync` | `true` | Keep the rendered view and the text editor scrolled to the same place. |
 | `inkstand.doubleClickToEdit` | `true` | Double-click in the rendered view to open the text editor at that line. |
 
