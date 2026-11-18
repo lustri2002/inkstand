@@ -141,6 +141,33 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('```\n<b>\n```', opts)).toContain('<pre data-line="0"><code>&lt;b&gt;\n</code></pre>');
   });
 
+  test('GitHub alerts render with a title', () => {
+    const html = renderMarkdown('> [!WARNING]\n> Mind the gap', opts);
+    expect(html).toContain('class="markdown-alert markdown-alert-warning"');
+    expect(html).toContain('Warning');
+    expect(html).toContain('Mind the gap');
+    expect(html).not.toContain('[!WARNING]');
+  });
+
+  test('plain blockquotes stay blockquotes', () => {
+    expect(renderMarkdown('> just a quote', opts)).toContain('<blockquote');
+  });
+
+  test('footnotes render a reference and a note with back link', () => {
+    const html = renderMarkdown('Text[^1]\n\n[^1]: The note.', opts);
+    expect(html).toContain('class="footnote-ref"');
+    expect(html).toContain('href="#fn1"');
+    expect(html).toContain('class="footnotes"');
+    expect(html).toContain('The note.');
+    expect(html).toContain('href="#fnref1"');
+  });
+
+  test('emoji shortcodes become emoji, text smileys do not', () => {
+    const html = renderMarkdown('Done :tada: :)', opts);
+    expect(html).toContain('🎉');
+    expect(html).toContain(':)');
+  });
+
   test('1 MB document renders', () => {
     const big = 'Paragrafo **bold**\n\n'.repeat(Math.ceil(1_000_000 / 20));
     expect(renderMarkdown(big, opts).length).toBeGreaterThan(0);
