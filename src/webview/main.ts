@@ -1,5 +1,6 @@
 import { activeIndex, breadcrumb, scrollPercent } from './outline';
 import { type LineBlock, lineToOffset, offsetToLine } from './scrollSync';
+import { renderDiagrams, watchTheme } from './diagrams';
 
 declare function acquireVsCodeApi(): {
   getState(): unknown;
@@ -15,6 +16,8 @@ interface State {
 }
 
 const vscode = acquireVsCodeApi();
+// Read while this script runs: later scripts (Mermaid) need the same nonce to pass the CSP.
+const nonce = (document.currentScript as HTMLScriptElement | null)?.nonce ?? '';
 const body = document.body;
 const toolbar = document.querySelector<HTMLElement>('.toolbar')!;
 const content = document.getElementById('content')!;
@@ -25,6 +28,11 @@ const position = document.getElementById('position')!;
 const tocToggle = document.getElementById('toc-toggle')!;
 const tocList = document.getElementById('toc-list')!;
 const fileTitle = crumb.dataset.title ?? '';
+const mermaidUrl = body.dataset.mermaid ?? '';
+
+function drawDiagrams(): void {
+  void renderDiagrams(content, mermaidUrl, nonce).then(updateIndicators);
+}
 
 const saved = (vscode.getState() ?? {}) as Partial<State>;
 const state: State = {
@@ -161,6 +169,8 @@ function setToc(open: boolean): void {
 
 countLines();
 buildToc();
+drawDiagrams();
+watchTheme(drawDiagrams);
 applyToc();
 applyMode(state.mode);
 // Opened from a link such as other.md#section.
@@ -243,6 +253,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     scrollToY(y);
     countLines();
     buildToc();
+    drawDiagrams();
     updateIndicators();
   } else if (message?.type === 'toggleMode') {
     setMode(state.mode === 'rendered' ? 'source' : 'rendered');

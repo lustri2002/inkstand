@@ -9,18 +9,24 @@ const html = buildHtml({
   nonce: 'abc',
   styleUri: 'vscode-resource://style.css',
   scriptUri: 'vscode-resource://webview.js',
+  mermaidUri: 'vscode-resource://mermaid.min.js',
 });
 
 describe('buildHtml', () => {
   test('uses the exact CSP from the spec', () => {
     expect(html).toContain(
-      "default-src 'none'; img-src CSP https: data:; style-src CSP; font-src CSP; script-src 'nonce-abc'",
+      "default-src 'none'; img-src CSP https: data:; style-src CSP 'unsafe-inline'; font-src CSP; script-src 'nonce-abc'",
     );
   });
 
-  test('has no unsafe-inline or unsafe-eval', () => {
-    expect(html).not.toContain('unsafe-inline');
+  test('scripts run only with the nonce: no unsafe-inline or unsafe-eval for scripts', () => {
+    const scriptSrc = /script-src ([^;"]*)/.exec(html)?.[1];
+    expect(scriptSrc).toBe("'nonce-abc'");
     expect(html).not.toContain('unsafe-eval');
+  });
+
+  test('passes the escaped Mermaid script URL on the body', () => {
+    expect(html).toContain('data-mermaid="vscode-resource://mermaid.min.js"');
   });
 
   test('wraps the body in #content', () => {
@@ -36,7 +42,7 @@ describe('buildHtml', () => {
   });
 
   test('has no initial anchor by default', () => {
-    expect(html).toContain('<body class="mode-rendered">');
+    expect(html).not.toContain('data-anchor');
   });
 
   test('carries the escaped initial anchor on the body', () => {
@@ -48,9 +54,10 @@ describe('buildHtml', () => {
       nonce: 'abc',
       styleUri: 's',
       scriptUri: 'j',
+      mermaidUri: 'm',
       anchor: 'a"b<c',
     });
-    expect(withAnchor).toContain('<body class="mode-rendered" data-anchor="a&quot;b&lt;c">');
+    expect(withAnchor).toContain('<body class="mode-rendered" data-mermaid="m" data-anchor="a&quot;b&lt;c">');
   });
 
   test('toolbar has the position indicator', () => {

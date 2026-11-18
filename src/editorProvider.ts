@@ -109,6 +109,7 @@ export class RenderedMarkdownEditorProvider implements vscode.CustomTextEditorPr
         nonce: randomBytes(16).toString('hex'),
         styleUri: webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'style.css')).toString(),
         scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(distRoot, 'webview.js')).toString(),
+        mermaidUri: webview.asWebviewUri(vscode.Uri.joinPath(distRoot, 'mermaid.min.js')).toString(),
         anchor: takeAnchor(),
       });
     webview.html = buildPage();
